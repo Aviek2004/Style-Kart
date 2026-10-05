@@ -1,64 +1,64 @@
 import { Link } from "react-router-dom";
+
 import { useCart } from "../context/CartContext";
 
 function CartSummary() {
-  const { totalPrice } = useCart();
-
-  const subtotal = Number(totalPrice) || 0;
-  const shipping = subtotal > 0 ? 99 : 0;
-  const total = subtotal + shipping;
+  const {
+    totalItems,
+    totalPrice,
+  } = useCart();
 
   return (
-    <div className="rounded-lg border bg-white p-8">
-
-      <h2 className="text-3xl font-bold">
+    <div className="rounded-lg border bg-white p-6">
+      <h2 className="text-xl font-bold">
         Order Summary
       </h2>
 
-      {/* Subtotal */}
-      <div className="mt-10 flex justify-between text-xl">
-        <span className="text-gray-600">
-          Subtotal
-        </span>
+      <div className="mt-6 space-y-4">
+        <div className="flex justify-between">
+          <span className="text-gray-500">
+            Items
+          </span>
 
-        <span>
-          ₹{subtotal.toFixed(2)}
-        </span>
+          <span>
+            {totalItems}
+          </span>
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-gray-500">
+            Delivery
+          </span>
+
+          <span className="text-green-600">
+            Free
+          </span>
+        </div>
+
+        <div className="flex justify-between border-t pt-4">
+          <span className="font-semibold">
+            Total
+          </span>
+
+          <span className="font-bold">
+            ₹{Number(totalPrice).toFixed(2)}
+          </span>
+        </div>
       </div>
 
-      {/* Shipping */}
-      <div className="mt-8 flex justify-between text-xl">
-        <span className="text-gray-600">
-          Shipping
-        </span>
-
-        <span>
-          ₹{shipping.toFixed(2)}
-        </span>
-      </div>
-
-      {/* Divider */}
-      <div className="my-8 border-t border-black" />
-
-      {/* Total */}
-      <div className="flex justify-between text-2xl font-bold">
-        <span>
-          Total
-        </span>
-
-        <span>
-          ₹{total.toFixed(2)}
-        </span>
-      </div>
-
-      {/* Checkout */}
       <Link
         to="/checkout"
-        className="mt-10 block rounded bg-black px-6 py-5 text-center text-xl font-semibold text-white hover:bg-gray-800"
+        className="mt-6 block w-full rounded bg-black px-6 py-3 text-center font-semibold text-white hover:bg-gray-800"
       >
         Proceed to Checkout
       </Link>
 
+      <Link
+        to="/products"
+        className="mt-3 block text-center text-sm text-gray-500 hover:underline"
+      >
+        Continue Shopping
+      </Link>
     </div>
   );
 }
