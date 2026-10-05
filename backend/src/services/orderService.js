@@ -1,5 +1,9 @@
 const pool = require("../config/db");
 
+// ======================================================
+// GET ALL ORDERS - ADMIN
+// ======================================================
+
 async function getAllOrders() {
   const [orders] = await pool.query(`
     SELECT
@@ -25,6 +29,10 @@ async function getAllOrders() {
   return orders;
 }
 
+// ======================================================
+// GET USER ORDERS
+// ======================================================
+
 async function getUserOrders(userId) {
   const [orders] = await pool.query(
     `
@@ -46,6 +54,7 @@ async function getUserOrders(userId) {
     [userId]
   );
 
+  // Get items for every order
   for (const order of orders) {
     const [items] = await pool.query(
       `
@@ -55,7 +64,7 @@ async function getUserOrders(userId) {
         oi.quantity,
         oi.price,
         p.name,
-        p.image
+        p.image_url AS image
       FROM order_items oi
       JOIN products p
         ON oi.product_id = p.id
@@ -69,6 +78,10 @@ async function getUserOrders(userId) {
 
   return orders;
 }
+
+// ======================================================
+// GET SINGLE ORDER
+// ======================================================
 
 async function getOrderById(userId, orderId) {
   const [orders] = await pool.query(
@@ -105,7 +118,7 @@ async function getOrderById(userId, orderId) {
       oi.quantity,
       oi.price,
       p.name,
-      p.image
+      p.image_url AS image
     FROM order_items oi
     JOIN products p
       ON oi.product_id = p.id
@@ -119,11 +132,19 @@ async function getOrderById(userId, orderId) {
   return order;
 }
 
+// ======================================================
+// CREATE ORDER
+// ======================================================
+
 async function createOrder(userId, shippingAddress) {
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
+
+    // --------------------------------------------------
+    // Find user's cart
+    // --------------------------------------------------
 
     const [cartRows] = await connection.query(
       `
@@ -139,6 +160,10 @@ async function createOrder(userId, shippingAddress) {
     }
 
     const cartId = cartRows[0].id;
+
+    // --------------------------------------------------
+    // Get cart items
+    // --------------------------------------------------
 
     const [items] = await connection.query(
       `
@@ -159,11 +184,21 @@ async function createOrder(userId, shippingAddress) {
       throw new Error("Cart is empty");
     }
 
+    // --------------------------------------------------
+    // Calculate total
+    // --------------------------------------------------
+
     const totalAmount = items.reduce(
       (total, item) =>
-        total + Number(item.price) * item.quantity,
+        total +
+        Number(item.price) *
+          Number(item.quantity),
       0
     );
+
+    // --------------------------------------------------
+    // Create order
+    // --------------------------------------------------
 
     const [orderResult] = await connection.query(
       `
@@ -194,6 +229,10 @@ async function createOrder(userId, shippingAddress) {
 
     const orderId = orderResult.insertId;
 
+    // --------------------------------------------------
+    // Create order items
+    // --------------------------------------------------
+
     for (const item of items) {
       await connection.query(
         `
@@ -214,6 +253,10 @@ async function createOrder(userId, shippingAddress) {
       );
     }
 
+    // --------------------------------------------------
+    // Empty cart after successful order
+    // --------------------------------------------------
+
     await connection.query(
       `
       DELETE FROM cart_items
@@ -221,6 +264,10 @@ async function createOrder(userId, shippingAddress) {
       `,
       [cartId]
     );
+
+    // --------------------------------------------------
+    // Commit transaction
+    // --------------------------------------------------
 
     await connection.commit();
 
@@ -233,15 +280,22 @@ async function createOrder(userId, shippingAddress) {
   } catch (error) {
     await connection.rollback();
     throw error;
+
   } finally {
     connection.release();
   }
 }
 
+// ======================================================
+// CANCEL ORDER
+// ======================================================
+
 async function cancelOrder(userId, orderId) {
   const [orders] = await pool.query(
     `
-    SELECT id, status
+    SELECT
+      id,
+      status
     FROM orders
     WHERE id = ?
       AND user_id = ?
@@ -255,6 +309,7 @@ async function cancelOrder(userId, orderId) {
 
   const order = orders[0];
 
+  // Only these statuses can be cancelled
   if (
     order.status !== "PLACED" &&
     order.status !== "CONFIRMED"
@@ -280,7 +335,14 @@ async function cancelOrder(userId, orderId) {
   };
 }
 
-async function updateOrderStatus(orderId, status) {
+// ======================================================
+// UPDATE ORDER STATUS - ADMIN
+// ======================================================
+
+async function updateOrderStatus(
+  orderId,
+  status
+) {
   const allowedStatuses = [
     "PLACED",
     "CONFIRMED",
@@ -311,6 +373,10 @@ async function updateOrderStatus(orderId, status) {
     status,
   };
 }
+
+// ======================================================
+// EXPORTS
+// ======================================================
 
 module.exports = {
   createOrder,
