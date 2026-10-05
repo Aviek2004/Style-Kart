@@ -1,6 +1,9 @@
 import { useState } from "react";
 
-function CheckoutForm({ onSubmit }) {
+function CheckoutForm({
+  onSubmit,
+  loading,
+}) {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -165,10 +168,12 @@ function CheckoutForm({ onSubmit }) {
       </div>
 
       <button
-        type="submit"
-        className="mt-8 w-full rounded bg-black py-3 font-semibold text-white hover:bg-gray-800"
+          type="submit"
+          disabled={loading}
+          className="mt-8 w-full rounded bg-black py-3 font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
       >
-        Continue to Payment
+          {loading
+          ? "Placing Order..." : "Place Order"}
       </button>
     </form>
   );

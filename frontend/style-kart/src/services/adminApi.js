@@ -14,11 +14,7 @@ async function request(url, options = {}) {
     headers: {
       "Content-Type": "application/json",
 
-      ...(token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
-        : {}),
+      Authorization: `Bearer ${token}`,
 
       ...(options.headers || {}),
     },
@@ -28,21 +24,28 @@ async function request(url, options = {}) {
 
   if (!response.ok) {
     throw new Error(
-      data.message || "Order request failed"
+      data.message || "Admin request failed"
     );
   }
 
   return data.data;
 }
 
-export async function createOrder(
-  shippingAddress
-) {
-  return request(API_URL, {
-    method: "POST",
+export async function getAllOrders() {
+  return request(`${API_URL}/admin/all`);
+}
 
-    body: JSON.stringify(
-      shippingAddress
-    ),
-  });
+export async function updateOrderStatus(
+  orderId,
+  status
+) {
+  return request(
+    `${API_URL}/admin/${orderId}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        status,
+      }),
+    }
+  );
 }

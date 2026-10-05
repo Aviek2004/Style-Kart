@@ -3,7 +3,7 @@ USE stylekart;
 CREATE TABLE orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
 
-    user_id INT NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
 
     total_amount DECIMAL(10,2) NOT NULL,
 
@@ -53,3 +53,12 @@ CREATE TABLE order_items (
         REFERENCES orders(id)
         ON DELETE CASCADE
 );
+
+USE stylekart;
+
+ALTER TABLE order_items
+MODIFY variant_id INT NULL;
+
+ALTER TABLE order_items
+ADD COLUMN variant_size VARCHAR(50) NULL,
+ADD COLUMN variant_color VARCHAR(50) NULL;

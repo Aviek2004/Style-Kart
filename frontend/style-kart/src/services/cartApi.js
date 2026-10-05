@@ -34,17 +34,14 @@ async function request(url, options = {}) {
   return data.data;
 }
 
-
 // GET CART
 export async function getCart() {
   return request(API_URL);
 }
 
-
-// ADD PRODUCT + VARIANT
+// ADD PRODUCT
 export async function addCartItem(
   productId,
-  variantId,
   quantity = 1
 ) {
   return request(API_URL, {
@@ -52,21 +49,18 @@ export async function addCartItem(
 
     body: JSON.stringify({
       productId,
-      variantId,
       quantity,
     }),
   });
 }
 
-
 // UPDATE QUANTITY
 export async function updateCartItem(
   productId,
-  variantId,
   quantity
 ) {
   return request(
-    `${API_URL}/${productId}/${variantId}`,
+    `${API_URL}/${productId}`,
     {
       method: "PATCH",
 
@@ -77,20 +71,17 @@ export async function updateCartItem(
   );
 }
 
-
-// REMOVE PRODUCT + VARIANT
+// REMOVE PRODUCT
 export async function removeCartItem(
-  productId,
-  variantId
+  productId
 ) {
   return request(
-    `${API_URL}/${productId}/${variantId}`,
+    `${API_URL}/${productId}`,
     {
       method: "DELETE",
     }
   );
 }
-
 
 // CLEAR CART
 export async function clearCart() {

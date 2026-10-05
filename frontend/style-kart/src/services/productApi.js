@@ -1,29 +1,24 @@
-const API_URL = "http://localhost:5000/api/v1";
+const API_URL =
+  "http://localhost:5000/api/v1/products";
 
-export async function fetchProducts() {
-  const response = await fetch(
-    `${API_URL}/products`
-  );
+async function request(url) {
+  const response = await fetch(url);
+
+  const data = await response.json();
 
   if (!response.ok) {
-    throw new Error("Failed to fetch products");
+    throw new Error(
+      data.message || "Failed to fetch products"
+    );
   }
 
-  const result = await response.json();
-
-  return result.data;
+  return data.data;
 }
 
-export async function fetchProductById(id) {
-  const response = await fetch(
-    `${API_URL}/products/${id}`
-  );
+export async function getProducts() {
+  return request(API_URL);
+}
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch product");
-  }
-
-  const result = await response.json();
-
-  return result.data;
+export async function getProductById(id) {
+  return request(`${API_URL}/${id}`);
 }

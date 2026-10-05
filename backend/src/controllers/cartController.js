@@ -1,195 +1,272 @@
-const cartService = require("../services/cartService");
+const cartService =
+  require("../services/cartService");
 
-
+// ==========================================
 // GET CART
+// ==========================================
+
 async function getCart(req, res) {
   try {
+    const cart =
+      await cartService.getCart(
+        req.user.userId
+      );
 
-    const cart = await cartService.getCart(
-      req.user.userId
-    );
-
-    res.json({
+    return res.status(200).json({
       success: true,
       data: cart,
     });
 
   } catch (error) {
+    console.error(
+      "Get cart error:",
+      error
+    );
 
-    console.error(error);
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Failed to fetch cart",
+      message:
+        "Failed to fetch cart",
     });
-
   }
 }
 
+// ==========================================
+// ADD CART ITEM
+// ==========================================
 
-// ADD TO CART
-async function addToCart(req, res) {
+async function addCartItem(req, res) {
   try {
-
     const {
       productId,
-      variantId,
       quantity,
     } = req.body;
 
     if (!productId) {
       return res.status(400).json({
         success: false,
-        message: "Product ID is required",
-      });
-    }
-
-    if (!variantId) {
-      return res.status(400).json({
-        success: false,
-        message: "Variant ID is required",
+        message:
+          "Product ID is required",
       });
     }
 
     const cart =
-      await cartService.addToCart(
+      await cartService.addCartItem(
         req.user.userId,
         Number(productId),
-        Number(variantId),
         Number(quantity) || 1
       );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "Product added to cart",
+      message:
+        "Product added to cart",
       data: cart,
     });
 
   } catch (error) {
 
-    console.error(error);
+    if (
+      error.message ===
+      "PRODUCT_NOT_FOUND"
+    ) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Product not found",
+      });
+    }
 
-    res.status(500).json({
+    console.error(
+      "Add cart item error:",
+      error
+    );
+
+    return res.status(500).json({
       success: false,
-      message: "Failed to add product to cart",
+      message:
+        error.message ||
+        "Failed to add product to cart",
     });
-
   }
 }
 
-
+// ==========================================
 // UPDATE CART ITEM
+// ==========================================
+
 async function updateCartItem(req, res) {
   try {
-
     const {
-      productId,
-      variantId,
-    } = req.params;
-
-    const { quantity } = req.body;
+      quantity,
+    } = req.body;
 
     if (quantity === undefined) {
       return res.status(400).json({
         success: false,
-        message: "Quantity is required",
+        message:
+          "Quantity is required",
+      });
+    }
+
+    const productId =
+      Number(req.params.productId);
+
+    const parsedQuantity =
+      Number(quantity);
+
+    if (
+      !Number.isInteger(productId) ||
+      productId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid product ID",
+      });
+    }
+
+    if (
+      !Number.isInteger(
+        parsedQuantity
+      ) ||
+      parsedQuantity < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid quantity",
       });
     }
 
     const cart =
       await cartService.updateCartItem(
         req.user.userId,
-        Number(productId),
-        Number(variantId),
-        Number(quantity)
+        productId,
+        parsedQuantity
       );
 
-    res.json({
+    return res.status(200).json({
       success: true,
-      message: "Cart updated",
+      message:
+        "Cart updated",
       data: cart,
     });
 
   } catch (error) {
 
-    console.error(error);
+    if (
+      error.message ===
+      "CART_ITEM_NOT_FOUND"
+    ) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Cart item not found",
+      });
+    }
 
-    res.status(500).json({
+    console.error(
+      "Update cart item error:",
+      error
+    );
+
+    return res.status(500).json({
       success: false,
-      message: "Failed to update cart",
+      message:
+        error.message ||
+        "Failed to update cart",
     });
-
   }
 }
 
-
+// ==========================================
 // REMOVE CART ITEM
-async function removeFromCart(req, res) {
-  try {
+// ==========================================
 
-    const {
-      productId,
-      variantId,
-    } = req.params;
+async function removeCartItem(
+  req,
+  res
+) {
+  try {
+    const productId =
+      Number(req.params.productId);
+
+    if (
+      !Number.isInteger(productId) ||
+      productId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid product ID",
+      });
+    }
 
     const cart =
-      await cartService.removeFromCart(
+      await cartService.removeCartItem(
         req.user.userId,
-        Number(productId),
-        Number(variantId)
+        productId
       );
 
-    res.json({
+    return res.status(200).json({
       success: true,
-      message: "Product removed from cart",
+      message:
+        "Product removed from cart",
       data: cart,
     });
 
   } catch (error) {
+    console.error(
+      "Remove cart item error:",
+      error
+    );
 
-    console.error(error);
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Failed to remove product from cart",
+      message:
+        error.message ||
+        "Failed to remove product",
     });
-
   }
 }
 
-
+// ==========================================
 // CLEAR CART
+// ==========================================
+
 async function clearCart(req, res) {
   try {
-
     const cart =
       await cartService.clearCart(
         req.user.userId
       );
 
-    res.json({
+    return res.status(200).json({
       success: true,
-      message: "Cart cleared",
+      message:
+        "Cart cleared",
       data: cart,
     });
 
   } catch (error) {
+    console.error(
+      "Clear cart error:",
+      error
+    );
 
-    console.error(error);
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Failed to clear cart",
+      message:
+        "Failed to clear cart",
     });
-
   }
 }
 
-
 module.exports = {
   getCart,
-  addToCart,
+  addCartItem,
   updateCartItem,
-  removeFromCart,
+  removeCartItem,
   clearCart,
 };

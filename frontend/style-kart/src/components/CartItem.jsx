@@ -7,12 +7,15 @@ function CartItem({ item }) {
     removeFromCart,
   } = useCart();
 
-  const { product, variant, quantity } = item;
+  const {
+    product,
+    quantity,
+  } = item;
 
   return (
     <div className="flex gap-5 border-b py-6">
 
-      {/* Image */}
+      {/* Product Image */}
 
       <img
         src={product.image}
@@ -20,13 +23,14 @@ function CartItem({ item }) {
         className="h-32 w-24 rounded object-cover"
       />
 
-      {/* Information */}
+      {/* Product Information */}
 
       <div className="flex flex-1 flex-col">
 
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-4">
 
           <div>
+
             <p className="text-xs uppercase text-gray-500">
               {product.brand}
             </p>
@@ -36,21 +40,34 @@ function CartItem({ item }) {
             </h3>
 
             <p className="mt-2 text-sm text-gray-500">
-              Size: {variant.size}
+              Category: {product.category}
             </p>
 
-            <p className="text-sm text-gray-500">
-              Color: {variant.color}
+            <p className="mt-2 text-sm text-gray-500">
+              ₹
+              {Number(
+                product.price
+              ).toFixed(2)}{" "}
+              each
             </p>
+
           </div>
 
+          {/* Total */}
+
           <p className="font-semibold">
-            ₹{product.price * quantity}
+            ₹
+            {(
+              Number(
+                product.price
+              ) *
+              Number(quantity)
+            ).toFixed(2)}
           </p>
 
         </div>
 
-        {/* Quantity */}
+        {/* Controls */}
 
         <div className="mt-auto flex items-center gap-4">
 
@@ -59,11 +76,10 @@ function CartItem({ item }) {
             <button
               onClick={() =>
                 decreaseQuantity(
-                  product.id,
-                  variant.id
+                  product.id
                 )
               }
-              className="px-3 py-1 text-lg"
+              className="px-3 py-1 text-lg hover:bg-gray-100"
             >
               −
             </button>
@@ -75,11 +91,10 @@ function CartItem({ item }) {
             <button
               onClick={() =>
                 increaseQuantity(
-                  product.id,
-                  variant.id
+                  product.id
                 )
               }
-              className="px-3 py-1 text-lg"
+              className="px-3 py-1 text-lg hover:bg-gray-100"
             >
               +
             </button>
@@ -89,8 +104,7 @@ function CartItem({ item }) {
           <button
             onClick={() =>
               removeFromCart(
-                product.id,
-                variant.id
+                product.id
               )
             }
             className="text-sm text-red-600 hover:underline"

@@ -5,56 +5,22 @@ import {
   useState,
 } from "react";
 
-import { useAuth } from "./AuthContext";
-
 import {
   getCart,
   addCartItem,
   updateCartItem,
   removeCartItem,
-  clearCart,
+  clearCart as clearCartApi,
 } from "../services/cartApi";
 
-import products from "../data/products";
+import { useAuth } from "./AuthContext";
 
+const CartContext =
+  createContext(null);
 
-const CartContext = createContext(null);
-
-
-function formatCartItems(items) {
-  return items
-    .map((item) => {
-      const product = products.find(
-        (product) =>
-          product.id === Number(item.product_id)
-      );
-
-      if (!product) {
-        return null;
-      }
-
-      const variant = product.variants?.find(
-        (variant) =>
-          variant.id === Number(item.variant_id)
-      );
-
-      if (!variant) {
-        return null;
-      }
-
-      return {
-        id: item.id,
-        product,
-        variant,
-        quantity: Number(item.quantity),
-      };
-    })
-    .filter(Boolean);
-}
-
-
-export function CartProvider({ children }) {
-
+export function CartProvider({
+  children,
+}) {
   const {
     user,
     loading: authLoading,
@@ -66,212 +32,311 @@ export function CartProvider({ children }) {
   const [loading, setLoading] =
     useState(false);
 
+  // ==========================================
+  // FORMAT CART
+  // ==========================================
 
+  function formatCartItems(
+    items = []
+  ) {
+    return items.map((item) => ({
+      product: {
+        id: item.product_id,
+        name: item.name,
+        description: item.description,
+        brand: item.brand,
+        category: item.category,
+        price: Number(item.price),
+        rating: Number(item.rating),
+        image: item.image_url,
+      },
+
+      quantity:
+        Number(item.quantity),
+    }));
+  }
+
+  // ==========================================
+  // UPDATE LOCAL CART
+  // ==========================================
+
+  function updateLocalCart(
+    items = []
+  ) {
+    setCartItems(
+      formatCartItems(items)
+    );
+  }
+
+  // ==========================================
   // LOAD CART
+  // ==========================================
+
+  async function loadCart() {
+    if (!user) {
+      setCartItems([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const data =
+        await getCart();
+
+      updateLocalCart(
+        data.items
+      );
+
+    } catch (error) {
+      console.error(
+        "Failed to load cart:",
+        error
+      );
+
+      setCartItems([]);
+
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ==========================================
+  // LOAD WHEN USER LOGS IN
+  // ==========================================
+
   useEffect(() => {
+    if (authLoading) return;
 
-    async function loadCart() {
-
-      if (authLoading) {
-        return;
-      }
-
-      if (!user) {
-        setCartItems([]);
-        return;
-      }
-
-      try {
-
-        setLoading(true);
-
-        const cart =
-          await getCart();
-
-        setCartItems(
-          formatCartItems(
-            cart.items || []
-          )
-        );
-
-      } catch (error) {
-
-        console.error(
-          "Failed to load cart:",
-          error
-        );
-
-        setCartItems([]);
-
-      } finally {
-
-        setLoading(false);
-
-      }
+    if (!user) {
+      setCartItems([]);
+      return;
     }
 
     loadCart();
-
   }, [user, authLoading]);
 
-
+  // ==========================================
   // ADD TO CART
+  // ==========================================
+
   async function addToCart(
-    productId,
-    variantId,
-    quantity = 1
+    product
   ) {
-
-    if (!user) {
-      throw new Error(
-        "Please login to add products to cart"
-      );
-    }
-
-    const cart =
+    try {
       await addCartItem(
-        productId,
-        variantId,
-        quantity
+        product.id,
+        1
       );
 
-    setCartItems(
-      formatCartItems(
-        cart.items || []
-      )
-    );
+      await loadCart();
 
-    return cart;
+    } catch (error) {
+      console.error(
+        "Failed to add item:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Failed to add item to cart"
+      );
+    }
   }
 
-
+  // ==========================================
   // INCREASE
+  // ==========================================
+
   async function increaseQuantity(
-    productId,
-    variantId
+    productId
   ) {
-
-    const item = cartItems.find(
-      (item) =>
-        item.product.id === productId &&
-        item.variant.id === variantId
-    );
-
-    if (!item) {
-      return;
-    }
-
-    const cart =
-      await updateCartItem(
-        productId,
-        variantId,
-        item.quantity + 1
+    const item =
+      cartItems.find(
+        (item) =>
+          item.product.id ===
+          productId
       );
 
-    setCartItems(
-      formatCartItems(
-        cart.items || []
-      )
-    );
+    if (!item) return;
+
+    try {
+      const data =
+        await updateCartItem(
+          productId,
+          item.quantity + 1
+        );
+
+      updateLocalCart(
+        data.items
+      );
+
+    } catch (error) {
+      console.error(
+        "Failed to increase quantity:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Failed to update quantity"
+      );
+    }
   }
 
-
+  // ==========================================
   // DECREASE
+  // ==========================================
+
   async function decreaseQuantity(
-    productId,
-    variantId
+    productId
   ) {
+    const item =
+      cartItems.find(
+        (item) =>
+          item.product.id ===
+          productId
+      );
 
-    const item = cartItems.find(
-      (item) =>
-        item.product.id === productId &&
-        item.variant.id === variantId
-    );
-
-    if (!item) {
-      return;
-    }
+    if (!item) return;
 
     const newQuantity =
       item.quantity - 1;
 
-    const cart =
-      await updateCartItem(
-        productId,
-        variantId,
-        newQuantity
+    try {
+      if (newQuantity <= 0) {
+        const data =
+          await removeCartItem(
+            productId
+          );
+
+        updateLocalCart(
+          data.items
+        );
+
+        return;
+      }
+
+      const data =
+        await updateCartItem(
+          productId,
+          newQuantity
+        );
+
+      updateLocalCart(
+        data.items
       );
 
-    setCartItems(
-      formatCartItems(
-        cart.items || []
-      )
-    );
-  }
-
-
-  // REMOVE
-  async function removeFromCart(
-    productId,
-    variantId
-  ) {
-
-    const cart =
-      await removeCartItem(
-        productId,
-        variantId
+    } catch (error) {
+      console.error(
+        "Failed to decrease quantity:",
+        error
       );
 
-    setCartItems(
-      formatCartItems(
-        cart.items || []
-      )
-    );
-  }
-
-
-  // CLEAR
-  async function emptyCart() {
-
-    if (!user) {
-      return;
+      alert(
+        error.message ||
+          "Failed to update quantity"
+      );
     }
-
-    const cart =
-      await clearCart();
-
-    setCartItems(
-      formatCartItems(
-        cart.items || []
-      )
-    );
   }
 
+  // ==========================================
+  // REMOVE
+  // ==========================================
 
-  // CART COUNT
-  const cartCount =
+  async function removeFromCart(
+    productId
+  ) {
+    try {
+      const data =
+        await removeCartItem(
+          productId
+        );
+
+      updateLocalCart(
+        data.items
+      );
+
+    } catch (error) {
+      console.error(
+        "Failed to remove cart item:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Failed to remove item"
+      );
+    }
+  }
+
+  // ==========================================
+  // CLEAR CART
+  // ==========================================
+
+  async function clearCart() {
+    try {
+      await clearCartApi();
+
+      setCartItems([]);
+
+    } catch (error) {
+      console.error(
+        "Failed to clear cart:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Failed to clear cart"
+      );
+    }
+  }
+
+  // ==========================================
+  // TOTAL ITEMS
+  // ==========================================
+
+  const totalItems =
     cartItems.reduce(
       (total, item) =>
-        total + Number(item.quantity),
+        total +
+        Number(item.quantity),
       0
     );
 
+  // ==========================================
+  // TOTAL PRICE
+  // ==========================================
+
+  const totalPrice =
+    cartItems.reduce(
+      (total, item) =>
+        total +
+        Number(
+          item.product.price
+        ) *
+          Number(
+            item.quantity
+          ),
+      0
+    );
 
   return (
     <CartContext.Provider
       value={{
         cartItems,
-        cartCount,
+        totalItems,
+        totalPrice,
         loading,
 
         addToCart,
-
         increaseQuantity,
         decreaseQuantity,
-
         removeFromCart,
+        clearCart,
 
-        emptyCart,
+        loadCart,
       }}
     >
       {children}
@@ -279,7 +344,8 @@ export function CartProvider({ children }) {
   );
 }
 
-
 export function useCart() {
-  return useContext(CartContext);
+  return useContext(
+    CartContext
+  );
 }

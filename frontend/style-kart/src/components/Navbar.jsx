@@ -1,13 +1,13 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 function Navbar() {
   const { totalItems } = useCart();
 
   const { user, logout } = useAuth();
+
   const navigate = useNavigate();
 
   return (
@@ -15,12 +15,16 @@ function Navbar() {
 
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
 
+        {/* Logo */}
+
         <Link
           to="/"
           className="text-2xl font-bold"
         >
           StyleKart
         </Link>
+
+        {/* Navigation */}
 
         <div className="flex items-center gap-8">
 
@@ -45,6 +49,19 @@ function Navbar() {
             )}
           </Link>
 
+          {/* My Orders */}
+
+          {user && (
+            <Link
+              to="/orders"
+              className="hover:text-gray-500"
+            >
+              My Orders
+            </Link>
+          )}
+
+          {/* Authentication */}
+
           {user ? (
             <>
               <span className="text-sm text-gray-600">
@@ -56,7 +73,7 @@ function Navbar() {
                   logout();
                   navigate("/login");
                 }}
-                className="text-red-600"
+                className="text-red-600 hover:underline"
               >
                 Logout
               </button>

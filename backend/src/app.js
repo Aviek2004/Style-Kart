@@ -5,6 +5,7 @@ const productRoutes = require("./routes/productRoutes");
 const authRoutes = require("./routes/authRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const checkoutRoutes = require("./routes/checkoutRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 const app = express();
 
@@ -36,6 +37,11 @@ app.use(
 app.use(
   "/api/v1/cart",
   cartRoutes
+);
+
+app.use(
+  "/api/v1/orders",
+  orderRoutes
 );
 
 app.use(

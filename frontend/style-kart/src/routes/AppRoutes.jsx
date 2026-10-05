@@ -13,6 +13,9 @@ import Cart from "../pages/Cart";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Checkout from "../pages/Checkout";
+import Orders from "../pages/Orders";
+import OrderDetails from "../pages/OrderDetails";
+import AdminOrders from "../pages/AdminOrders";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 
@@ -27,6 +30,16 @@ function AppRoutes() {
           <Route
             path="/"
             element={<Home />}
+          />
+          
+          <Route
+            path="/admin/orders"
+            element={<AdminOrders />}
+          />
+
+          <Route
+            path="/orders"
+            element={<Orders />}
           />
 
           {/* Products */}
@@ -57,6 +70,11 @@ function AppRoutes() {
           <Route
             path="/register"
             element={<Register />}
+          />
+
+          <Route
+            path="/orders/:id"
+            element={<OrderDetails />}
           />
 
           {/* Protected Routes */}

@@ -1,27 +1,69 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useState } from "react";
 
-import products from "../data/products";
 import VariantSelector from "../components/VariantSelector";
 import { useCart } from "../context/CartContext";
+
+const API_URL = "http://localhost:5000/api/v1/products";
 
 function ProductDetails() {
   const { id } = useParams();
 
-  const product = products.find(
-    (item) => item.id === Number(id)
-  );
+  const [product, setProduct] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [selectedVariant, setSelectedVariant] =
-    useState(null);
   const { addToCart } = useCart();
 
-  if (!product) {
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(`${API_URL}/${id}`);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to fetch product"
+          );
+        }
+
+        setProduct(data.data);
+      } catch (error) {
+        console.error(error);
+        setError("Failed to load product.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-6 py-20 text-center">
+        <p className="text-gray-500">
+          Loading product...
+        </p>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="mx-auto max-w-7xl px-6 py-20 text-center">
         <h1 className="text-2xl font-bold">
           Product Not Found
         </h1>
+
+        <p className="mt-3 text-gray-500">
+          {error}
+        </p>
       </div>
     );
   }
@@ -35,9 +77,9 @@ function ProductDetails() {
 
         <div className="overflow-hidden rounded-lg bg-gray-100">
           <img
-            src={product.image}
+            src={product.image_url}
             alt={product.name}
-            className="h-full max-h-650px w-full object-cover"
+            className="h-full max-h-[650px] w-full object-cover"
           />
         </div>
 
@@ -84,23 +126,21 @@ function ProductDetails() {
           <button
             disabled={!selectedVariant}
             onClick={() => {
-            addToCart(
-            product.id,
-            selectedVariant.id
-            );
-          }}
-          className="
-            mt-8
-            w-full
-            rounded
-           bg-black
-            py-4
-            font-semibold
-           text-white
-            transition
-           hover:bg-gray-800
-            disabled:cursor-not-allowed
-           disabled:bg-gray-300"
+              addToCart(product, selectedVariant);
+            }}
+            className="
+              mt-8
+              w-full
+              rounded
+              bg-black
+              py-4
+              font-semibold
+              text-white
+              transition
+              hover:bg-gray-800
+              disabled:cursor-not-allowed
+              disabled:bg-gray-300
+            "
           >
             {selectedVariant
               ? "Add to Cart"

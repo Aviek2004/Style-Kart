@@ -1,5 +1,4 @@
-const API_URL =
-  "http://localhost:5000/api/v1/orders";
+const API_URL = "http://localhost:5000/api/v1/orders";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -34,15 +33,21 @@ async function request(url, options = {}) {
 
   return data.data;
 }
+export async function getOrder(orderId) {
+  return request(
+    `${API_URL}/${orderId}`
+  );
+}
 
-export async function createOrder(
-  shippingAddress
-) {
-  return request(API_URL, {
-    method: "POST",
+export async function cancelOrder(orderId) {
+  return request(
+    `${API_URL}/${orderId}/cancel`,
+    {
+      method: "PATCH",
+    }
+  );
+}
 
-    body: JSON.stringify(
-      shippingAddress
-    ),
-  });
+export async function getOrders() {
+  return request(API_URL);
 }

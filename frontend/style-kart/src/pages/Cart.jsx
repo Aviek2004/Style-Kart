@@ -6,7 +6,10 @@ import CartItem from "../components/CartItem";
 import CartSummary from "../components/CartSummary";
 
 function Cart() {
-  const { cartItems, emptyCart } = useCart();
+  const {
+    cartItems,
+    clearCart,
+  } = useCart();
 
   if (cartItems.length === 0) {
     return (
@@ -47,7 +50,7 @@ function Cart() {
         </div>
 
         <button
-          onClick={emptyCart}
+          onClick={clearCart}
           className="text-sm text-red-600 hover:underline"
         >
           Clear Cart
@@ -57,20 +60,16 @@ function Cart() {
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_350px]">
 
-        {/* Cart Items */}
-
         <div>
-
-          {cartItems.map((item) => (
-            <CartItem
-              key={`${item.product.id}-${item.variant.id}`}
-              item={item}
-            />
-          ))}
-
+          {cartItems.map(
+            (item) => (
+              <CartItem
+                key={item.product.id}
+                item={item}
+              />
+            )
+          )}
         </div>
-
-        {/* Summary */}
 
         <div>
           <CartSummary />

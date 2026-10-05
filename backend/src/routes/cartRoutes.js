@@ -1,43 +1,38 @@
 const express = require("express");
 
-const authenticate = require("../middleware/authMiddleware");
+const authenticate =
+  require("../middleware/authMiddleware");
 
 const {
   getCart,
-  addToCart,
+  addCartItem,
   updateCartItem,
-  removeFromCart,
+  removeCartItem,
   clearCart,
 } = require("../controllers/cartController");
 
 const router = express.Router();
 
-
-// Every cart route requires login
+// All cart routes require login
 router.use(authenticate);
 
-
 // GET CART
-router.get("/", getCart);
-
+router.get(
+  "/",
+  getCart
+);
 
 // ADD PRODUCT
-router.post("/", addToCart);
-
+router.post(
+  "/",
+  addCartItem
+);
 
 // UPDATE QUANTITY
 router.patch(
-  "/:productId/:variantId",
+  "/:productId",
   updateCartItem
 );
-
-
-// REMOVE PRODUCT
-router.delete(
-  "/:productId/:variantId",
-  removeFromCart
-);
-
 
 // CLEAR CART
 router.delete(
@@ -45,5 +40,10 @@ router.delete(
   clearCart
 );
 
+// REMOVE PRODUCT
+router.delete(
+  "/:productId",
+  removeCartItem
+);
 
 module.exports = router;
